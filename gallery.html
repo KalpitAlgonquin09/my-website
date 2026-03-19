@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gallery — Kalpit Parekh</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #080a0e;
+  --surface: #0d1018;
+  --accent: #00b4ff;
+  --accent2: #ff6b35;
+  --gold: #c9a96e;
+  --text: #e8e4dc;
+  --muted: #4a5568;
+  --white: #ffffff;
+  --border: rgba(0,180,255,0.1);
+}
+
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* ── CURSOR ──────────────────────────────────── */
+.cursor {
+  position: fixed; width: 6px; height: 6px;
+  background: var(--accent); border-radius: 50%;
+  pointer-events: none; z-index: 9999;
+  transform: translate(-50%,-50%);
+  transition: width .25s, height .25s, background .25s;
+  mix-blend-mode: screen;
+}
+.cursor-ring {
+  position: fixed; width: 32px; height: 32px;
+  border: 1px solid rgba(0,180,255,.35); border-radius: 50%;
+  pointer-events: none; z-index: 9998;
+  transform: translate(-50%,-50%);
+  transition: width .3s, height .3s, border-color .3s;
+}
+.cursor.expanded { width: 12px; height: 12px; background: var(--accent2); }
+.cursor-ring.expanded { width: 56px; height: 56px; border-color: rgba(255,107,53,.3); }
+
+/* ── NAV ─────────────────────────────────────── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 1.5rem 4rem;
+  background: linear-gradient(to bottom, rgba(8,10,14,.97), transparent);
+  backdrop-filter: blur(8px);
+}
+.logo {
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem;
+  letter-spacing: .15em; color: var(--white); text-decoration: none;
+}
+.logo span { color: var(--accent); }
+.nav-right { display: flex; align-items: center; gap: 3rem; }
+.nav-links { display: flex; gap: 2.5rem; list-style: none; }
+.nav-links a {
+  font-family: 'DM Mono', monospace; font-size: .65rem;
+  letter-spacing: .2em; text-transform: uppercase;
+  color: var(--muted); text-decoration: none; transition: color .3s;
+}
+.nav-links a:hover, .nav-links a.active { color: var(--accent); }
+.nav-back {
+  font-family: 'DM Mono', monospace; font-size: .65rem;
+  letter-spacing: .15em; text-transform: uppercase;
+  color: var(--accent); text-decoration: none;
+  display: flex; align-items: center; gap: .5rem;
+  border: 1px solid rgba(0,180,255,.2); padding: .5rem 1rem;
+  transition: background .3s, border-color .3s;
+}
+.nav-back:hover { background: rgba(0,180,255,.06); border-color: rgba(0,180,255,.4); }
+
+/* ── HERO ────────────────────────────────────── */
+.gallery-hero {
+  position: relative; height: 60vh; min-height: 480px;
+  display: flex; flex-direction: column;
+  justify-content: flex-end; padding: 0 4rem 5rem;
+  overflow: hidden;
+}
+.gallery-hero-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 70% 60% at 30% 50%, rgba(0,180,255,.07) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 70% at 80% 30%, rgba(201,169,110,.05) 0%, transparent 60%),
+    linear-gradient(180deg, #06080c 0%, #080a0e 100%);
+}
+.hero-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(0,180,255,.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,180,255,.025) 1px, transparent 1px);
+  background-size: 80px 80px;
+}
+.hero-diag {
+  position: absolute; top: 0; right: 20%; width: 1px; height: 100%;
+  background: linear-gradient(to bottom, transparent, rgba(0,180,255,.15), transparent);
+  transform: rotate(8deg); transform-origin: top;
+}
+.hero-diag2 {
+  position: absolute; top: 0; right: 35%; width: 1px; height: 60%;
+  background: linear-gradient(to bottom, transparent, rgba(201,169,110,.1), transparent);
+  transform: rotate(8deg); transform-origin: top;
+}
+.hero-meta {
+  position: absolute; top: 40%; right: 4rem;
+  font-family: 'DM Mono', monospace; font-size: .6rem;
+  letter-spacing: .25em; color: rgba(0,180,255,.4);
+  text-transform: uppercase; writing-mode: vertical-rl;
+  opacity: 0; animation: fadeSlideLeft 1s ease 1s forwards;
+}
+.hero-content { position: relative; z-index: 1; }
+.hero-eyebrow {
+  font-family: 'DM Mono', monospace; font-size: .65rem;
+  letter-spacing: .4em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 1.2rem;
+  display: flex; align-items: center; gap: 1rem;
+  opacity: 0; animation: slideUp .8s ease .2s forwards;
+}
+.hero-eyebrow::before { content: ''; width: 40px; height: 1px; background: var(--gold); }
+.hero-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(4.5rem, 12vw, 10rem);
+  line-height: .88; color: var(--white); letter-spacing: .02em;
+  opacity: 0; animation: slideUp .8s ease .4s forwards;
+}
+.hero-title em {
+  font-family: 'Cormorant Garamond', serif; font-style: italic;
+  font-weight: 300; color: var(--accent); font-size: .5em;
+  display: block; letter-spacing: .08em; line-height: 1.4;
+}
+.hero-desc {
+  font-size: 1rem; line-height: 1.8;
+  color: rgba(232,228,220,.45); max-width: 380px; margin-top: 1.5rem;
+  opacity: 0; animation: slideUp .8s ease .6s forwards;
+}
+@keyframes slideUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeSlideLeft { from{opacity:0;transform:translateX(12px)} to{opacity:.4;transform:translateX(0)} }
+
+/* ── FILTER BAR ──────────────────────────────── */
+.filter-bar {
+  display: flex; align-items: center; gap: 0;
+  padding: 0 4rem;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto; scrollbar-width: none;
+  background: rgba(8,10,14,.85);
+  backdrop-filter: blur(8px);
+  position: sticky; top: 72px; z-index: 100;
+}
+.filter-bar::-webkit-scrollbar { display: none; }
+.filter-label {
+  font-family: 'DM Mono', monospace; font-size: .6rem;
+  letter-spacing: .25em; text-transform: uppercase;
+  color: var(--muted); margin-right: 2rem;
+  white-space: nowrap; flex-shrink: 0;
+}
+.filter-btn {
+  font-family: 'DM Mono', monospace; font-size: .65rem;
+  letter-spacing: .15em; text-transform: uppercase;
+  color: var(--muted); background: none; border: none;
+  padding: 1.1rem 1.4rem; cursor: none;
+  transition: color .3s; white-space: nowrap; position: relative;
+}
+.filter-btn::after {
+  content: ''; position: absolute; bottom: 0;
+  left: 1.4rem; right: 1.4rem; height: 1px;
+  background: var(--accent); transform: scaleX(0); transition: transform .3s;
+}
+.filter-btn:hover { color: var(--text); }
+.filter-btn.active { color: var(--accent); }
+.filter-btn.active::after { transform: scaleX(1); }
+
+/* ── GALLERY ─────────────────────────────────── */
+.gallery-section { padding: 3rem 4rem 5rem; }
+
+/*
+  AUTO-RESPONSIVE GRID
+  ─────────────────────────────────────────────
+  12 columns · row unit = 8px · gap = 10px
+
+  JS reads each image's naturalWidth/naturalHeight,
+  calculates the ratio, then assigns:
+
+  ratio ≥ 2.4  → Panoramic  : 6 cols · 20 rows  (~160px)
+  ratio ≥ 1.55 → Landscape  : 4 cols · 26 rows  (~208px)
+  ratio ≥ 1.15 → Standard   : 4 cols · 30 rows  (~240px)
+  ratio ≥ 0.85 → Square     : 3 cols · 32 rows  (~256px)
+  ratio ≥ 0.55 → Portrait   : 3 cols · 46 rows  (~368px)
+  ratio <  0.55→ Tall       : 2 cols · 52 rows  (~416px)
+*/
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-auto-rows: 8px;
+  gap: 10px;
+}
+
+/* ── PHOTO CARD ──────────────────────────────── */
+.photo-card {
+  position: relative; overflow: hidden;
+  background: var(--surface);
+  border: 1px solid rgba(255,255,255,.03);
+  cursor: none;
+  /* starts invisible; JS fades in after shape is set */
+  opacity: 0;
+  transition: opacity .5s ease, border-color .4s;
+}
+.photo-card.loaded { opacity: 1; }
+.photo-card:hover { border-color: rgba(0,180,255,.2); }
+
+/* Real <img> fills the card — object-fit:cover keeps it clean */
+.photo-card img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  transition: transform .7s cubic-bezier(.25,.46,.45,.94), filter .4s;
+  filter: brightness(.82) saturate(.88);
+}
+.photo-card:hover img {
+  transform: scale(1.05);
+  filter: brightness(.96) saturate(1.05);
+}
+
+/* Corner accents */
+.photo-corner {
+  position: absolute; z-index: 3;
+  width: 12px; height: 12px;
+  border-color: rgba(0,180,255,.5); border-style: solid;
+  opacity: 0; transition: opacity .35s;
+}
+.photo-card:hover .photo-corner { opacity: 1; }
+.photo-corner.tl { top:0; left:0; border-width:1px 0 0 1px; }
+.photo-corner.tr { top:0; right:0; border-width:1px 1px 0 0; }
+.photo-corner.bl { bottom:0; left:0; border-width:0 0 1px 1px; }
+.photo-corner.br { bottom:0; right:0; border-width:0 1px 1px 0; }
+
+/* Shape tag (top-left, appears on hover) */
+.photo-shape-tag {
+  position: absolute; top: .6rem; left: .6rem; z-index: 4;
+  font-family: 'DM Mono', monospace; font-size: .45rem;
+  letter-spacing: .18em; text-transform: uppercase;
+  color: rgba(0,180,255,.65);
+  background: rgba(8,10,14,.55);
+  padding: .2rem .5rem;
+  border: 1px solid rgba(0,180,255,.15);
+  backdrop-filter: blur(4px);
+  opacity: 0; transition: opacity .3s;
+}
+.photo-card:hover .photo-shape-tag { opacity: 1; }
+
+/* Category / resolution tag (top-right) */
+.photo-tag {
+  position: absolute; top: .6rem; right: .6rem; z-index: 4;
+  font-family: 'DM Mono', monospace; font-size: .45rem;
+  letter-spacing: .18em; text-transform: uppercase;
+  color: rgba(0,180,255,.55);
+  background: rgba(8,10,14,.5);
+  padding: .2rem .5rem;
+  border: 1px solid rgba(0,180,255,.12);
+  backdrop-filter: blur(4px);
+}
+
+/* Overlay title */
+.photo-overlay {
+  position: absolute; inset: 0; z-index: 2;
+  background: linear-gradient(to top, rgba(4,6,10,.9) 0%, rgba(4,6,10,.1) 40%, transparent 100%);
+  opacity: 0; transition: opacity .4s;
+  display: flex; flex-direction: column;
+  justify-content: flex-end; padding: 1rem 1.2rem;
+}
+.photo-card:hover .photo-overlay { opacity: 1; }
+.photo-cat {
+  font-family: 'DM Mono', monospace; font-size: .48rem;
+  letter-spacing: .25em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: .25rem;
+  transform: translateY(6px); transition: transform .35s .05s;
+}
+.photo-card:hover .photo-cat { transform: translateY(0); }
+.photo-title {
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem;
+  color: var(--white); letter-spacing: .05em;
+  transform: translateY(6px); transition: transform .35s .1s;
+}
+.photo-card:hover .photo-title { transform: translateY(0); }
+
+/* Placeholder for cards with no image yet */
+.photo-placeholder {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: .5rem;
+  border: 1px dashed rgba(0,180,255,.1);
+}
+.ph-num {
+  font-family: 'Bebas Neue', sans-serif; font-size: 2rem;
+  color: rgba(0,180,255,.07); line-height: 1;
+}
+.ph-txt {
+  font-family: 'DM Mono', monospace; font-size: .5rem;
+  letter-spacing: .2em; text-transform: uppercase;
+  color: rgba(0,180,255,.18);
+}
+
+/* ── LIGHTBOX ─────────────────────────────────── */
+.lightbox {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(3,5,9,.97);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity .3s;
+  backdrop-filter: blur(16px);
+}
+.lightbox.open { opacity: 1; pointer-events: all; }
+.lb-wrap {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  max-width: 92vw; max-height: 88vh;
+}
+.lb-wrap img {
+  max-width: 90vw; max-height: 84vh;
+  object-fit: contain; display: block;
+  border: 1px solid rgba(0,180,255,.1);
+  transform: scale(.93); transition: transform .35s;
+}
+.lightbox.open .lb-wrap img { transform: scale(1); }
+.lb-corner {
+  position: absolute; width: 18px; height: 18px;
+  border-color: rgba(0,180,255,.4); border-style: solid;
+}
+.lb-corner.tl{top:0;left:0;border-width:1px 0 0 1px}
+.lb-corner.tr{top:0;right:0;border-width:1px 1px 0 0}
+.lb-corner.bl{bottom:0;left:0;border-width:0 0 1px 1px}
+.lb-corner.br{bottom:0;right:0;border-width:0 1px 1px 0}
+.lb-info {
+  position: absolute; bottom: -3.2rem; left: 0; right: 0;
+  display: flex; justify-content: space-between; align-items: flex-end;
+}
+.lb-title {
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem;
+  color: var(--white); letter-spacing: .06em;
+}
+.lb-cat {
+  font-family: 'DM Mono', monospace; font-size: .55rem;
+  letter-spacing: .2em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: .15rem;
+}
+.lb-shape {
+  font-family: 'DM Mono', monospace; font-size: .5rem;
+  letter-spacing: .15em; color: var(--gold);
+}
+.lb-counter {
+  font-family: 'DM Mono', monospace; font-size: .58rem;
+  letter-spacing: .15em; color: var(--muted);
+}
+.lb-close {
+  position: fixed; top: 1.8rem; right: 1.8rem;
+  width: 44px; height: 44px;
+  border: 1px solid rgba(0,180,255,.2); background: rgba(8,10,14,.7);
+  display: flex; align-items: center; justify-content: center;
+  cursor: none; color: var(--text);
+  transition: border-color .3s, background .3s;
+  backdrop-filter: blur(4px);
+}
+.lb-close:hover { border-color: rgba(0,180,255,.5); background: rgba(0,180,255,.08); }
+.lb-nav {
+  position: fixed; top: 50%; transform: translateY(-50%);
+  width: 46px; height: 76px;
+  border: 1px solid rgba(0,180,255,.15); background: rgba(8,10,14,.5);
+  display: flex; align-items: center; justify-content: center;
+  cursor: none; color: var(--text);
+  transition: border-color .3s, background .3s;
+  backdrop-filter: blur(4px);
+}
+.lb-nav:hover { border-color: rgba(0,180,255,.4); background: rgba(0,180,255,.06); }
+.lb-prev { left: 1.2rem; }
+.lb-next { right: 1.2rem; }
+
+/* ── STATS ───────────────────────────────────── */
+.stats-strip {
+  display: flex; justify-content: center; gap: 6rem;
+  padding: 5rem 4rem; border-top: 1px solid var(--border);
+}
+.strip-stat { text-align: center; }
+.strip-num {
+  font-family: 'Bebas Neue', sans-serif; font-size: 3.5rem;
+  color: var(--white); line-height: 1;
+}
+.strip-num span { color: var(--accent); font-size: 2rem; }
+.strip-label {
+  font-family: 'DM Mono', monospace; font-size: .55rem;
+  letter-spacing: .25em; text-transform: uppercase;
+  color: var(--muted); margin-top: .4rem;
+}
+
+/* ── FOOTER ──────────────────────────────────── */
+footer {
+  background: var(--surface); padding: 2.5rem 4rem;
+  display: flex; justify-content: space-between; align-items: center;
+  border-top: 1px solid var(--border);
+}
+.footer-copy {
+  font-family: 'DM Mono', monospace; font-size: .6rem;
+  letter-spacing: .15em; color: var(--muted);
+}
+.footer-links { display: flex; gap: 2rem; }
+.footer-links a {
+  font-family: 'DM Mono', monospace; font-size: .6rem;
+  letter-spacing: .15em; text-transform: uppercase;
+  color: var(--muted); text-decoration: none; transition: color .3s;
+}
+.footer-links a:hover { color: var(--accent); }
+
+/* ── MOBILE ──────────────────────────────────── */
+@media (max-width: 900px) {
+  nav { padding: 1.2rem 2rem; }
+  .nav-links { display: none; }
+  .gallery-hero { padding: 0 2rem 4rem; }
+  .filter-bar { padding: 0 2rem; top: 62px; }
+  .gallery-section { padding: 2rem; }
+  .photo-grid { grid-template-columns: repeat(4, 1fr); }
+  .stats-strip { gap: 3rem; flex-wrap: wrap; padding: 3rem 2rem; }
+  footer { flex-direction: column; gap: 1.5rem; text-align: center; }
+  .lb-nav { display: none; }
+}
+@media (max-width: 500px) {
+  .photo-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="portfolio.html" class="logo">Kalpit<span>.</span>Parekh</a>
+  <div class="nav-right">
+    <ul class="nav-links">
+      <li><a href="portfolio.html">Reel</a></li>
+      <li><a href="gallery.html" class="active">Gallery</a></li>
+      <li><a href="portfolio.html">Videos</a></li>
+      <li><a href="portfolio.html">Contact</a></li>
+    </ul>
+    <a href="portfolio.html" class="nav-back">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Back
+    </a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="gallery-hero">
+  <div class="gallery-hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-diag"></div>
+  <div class="hero-diag2"></div>
+  <div class="hero-meta" id="heroMeta">— Frames · Ottawa &amp; Beyond</div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">Visual Archive</p>
+    <h1 class="hero-title">
+      The<br>
+      <em>Still Frame</em>
+      Collection
+    </h1>
+    <p class="hero-desc">Moments suspended in light. Each photograph placed exactly as it was captured — portrait, landscape, panoramic. No forced crops.</p>
+  </div>
+</div>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+  <span class="filter-label">Filter by</span>
+  <button class="filter-btn active" data-filter="all">All</button>
+  <button class="filter-btn" data-filter="aerial">Aerial</button>
+  <button class="filter-btn" data-filter="landscape">Landscape</button>
+  <button class="filter-btn" data-filter="urban">Urban</button>
+  <button class="filter-btn" data-filter="nature">Nature</button>
+  <button class="filter-btn" data-filter="golden-hour">Golden Hour</button>
+  <button class="filter-btn" data-filter="winter">Winter</button>
+  <button class="filter-btn" data-filter="night">Night</button>
+</div>
+
+<!-- ============================================================ -->
+<!-- GALLERY — each card just needs data-src, data-category,      -->
+<!-- data-title and the photo-tag text. The grid auto-sizes to    -->
+<!-- each photo's real aspect ratio. No manual grid spans needed. -->
+<!-- ============================================================ -->
+<section class="gallery-section">
+  <div class="photo-grid" id="photoGrid">
+
+    <!-- ✏️ TO ADD A PHOTO: copy one block, paste at the end, update
+         data-src, data-category, data-title, data-altitude.
+         Categories: aerial · landscape · urban · nature · golden-hour · winter
+         Grid auto-detects shape — no manual sizing needed! -->
+
+    <div class="photo-card" data-src="images/Parliament.jpg" data-category="aerial" data-title="Parliament Hill" data-altitude="380">
+      <div class="photo-tag">Aerial</div>
+      <div class="photo-corner tl"></div><div class="photo-corner tr"></div>
+      <div class="photo-corner bl"></div><div class="photo-corner br"></div>
+      <div class="photo-shape-tag"></div>
+      <div class="photo-overlay"><div class="photo-cat">Aerial</div><div class="photo-title">Parliament Hill</div></div>
+    </div>
+
+    <div class="photo-card" data-src="images/Night in Ottawa.jpg" data-category="aerial" data-title="Night in Ottawa" data-altitude="400">
+      <div class="photo-tag">Aerial · Night</div>
+      <div class="photo-corner tl"></div><div class="photo-corner tr"></div>
+      <div class="photo-corner bl"></div><div class="photo-corner br"></div>
+      <div class="photo-shape-tag"></div>
+      <div class="photo-overlay"><div class="photo-cat">Aerial</div><div class="photo-title">Night in Ottawa</div></div>
+    </div>
+
+    <div class="photo-card" data-src="images/Beach.jpg" data-category="landscape" data-title="Coastal View" data-altitude="150">
+      <div class="photo-tag">Landscape</div>
+      <div class="photo-corner tl"></div><div class="photo-corner tr"></div>
+      <div class="photo-corner bl"></div><div class="photo-corner br"></div>
+      <div class="photo-shape-tag"></div>
+      <div class="photo-overlay"><div class="photo-cat">Landscape</div><div class="photo-title">Coastal View</div></div>
+    </div>
+
+    <div class="photo-card" data-src="images/Homes.jpg" data-category="urban" data-title="Sunrise Over Homes" data-altitude="120">
+      <div class="photo-tag">Urban</div>
+      <div class="photo-corner tl"></div><div class="photo-corner tr"></div>
+      <div class="photo-corner bl"></div><div class="photo-corner br"></div>
+      <div class="photo-shape-tag"></div>
+      <div class="photo-overlay"><div class="photo-cat">Urban</div><div class="photo-title">Sunrise Over Homes</div></div>
+    </div>
+
+    <div class="photo-card" data-src="images/River_View.jpg" data-category="landscape" data-title="Fall Colors" data-altitude="200">
+      <div class="photo-tag">Landscape</div>
+      <div class="photo-corner tl"></div><div class="photo-corner tr"></div>
+      <div class="photo-corner bl"></div><div class="photo-corner br"></div>
+      <div class="photo-shape-tag"></div>
+      <div class="photo-overlay"><div class="photo-cat">Landscape</div><div class="photo-title">Fall Colors</div></div>
+    </div>
+
+    <div class="photo-card" data-src="images/Sunset.jpg" data-category="golden-hour" data-title="Sunset" data-altitude="320">
+      <div class="photo-tag">Golden Hour</div>
+      <div class="photo-corner tl"></div><div class="photo-corner tr"></div>
+      <div class="photo-corner bl"></div><div class="photo-corner br"></div>
+      <div class="photo-shape-tag"></div>
+      <div class="photo-overlay"><div class="photo-cat">Golden Hour</div><div class="photo-title">Sunset</div></div>
+    </div>
+
+    <div class="photo-card" data-src="images/Snowy.jpg" data-category="winter" data-title="Snow Storm" data-altitude="250">
+      <div class="photo-tag">Winter</div>
+      <div class="photo-corner tl"></div><div class="photo-corner tr"></div>
+      <div class="photo-corner bl"></div><div class="photo-corner br"></div>
+      <div class="photo-shape-tag"></div>
+      <div class="photo-overlay"><div class="photo-cat">Winter</div><div class="photo-title">Snow Storm</div></div>
+    </div>
+
+    <div class="photo-card" data-src="images/Reflection.jpg" data-category="golden-hour" data-title="Reflection" data-altitude="180">
+      <div class="photo-tag">Golden Hour</div>
+      <div class="photo-corner tl"></div><div class="photo-corner tr"></div>
+      <div class="photo-corner bl"></div><div class="photo-corner br"></div>
+      <div class="photo-shape-tag"></div>
+      <div class="photo-overlay"><div class="photo-cat">Golden Hour</div><div class="photo-title">Reflection</div></div>
+    </div>
+
+    <div class="photo-card" data-src="images/Architectural.jpg" data-category="landscape" data-title="Architectural" data-altitude="000">
+      <div class="photo-tag">Landscape</div>
+      <div class="photo-corner tl"></div><div class="photo-corner tr"></div>
+      <div class="photo-corner bl"></div><div class="photo-corner br"></div>
+      <div class="photo-shape-tag"></div>
+      <div class="photo-overlay"><div class="photo-cat">Landscape</div><div class="photo-title">Architectural</div></div>
+    </div>
+
+    <div class="photo-card" data-src="images/Night_Sky.jpg" data-category="aerial" data-title="Night Sky" data-altitude="200">
+      <div class="photo-tag">Aerial · Night Sky</div>
+      <div class="photo-corner tl"></div><div class="photo-corner tr"></div>
+      <div class="photo-corner bl"></div><div class="photo-corner br"></div>
+      <div class="photo-shape-tag"></div>
+      <div class="photo-overlay"><div class="photo-cat">Aerial</div><div class="photo-title">Night Sky</div></div>
+    </div>
+
+    <div class="photo-card" data-src="images/Long_Exposure.jpg" data-category="night" data-title="Long Exposure" data-altitude="100">
+      <div class="photo-tag">Night</div>
+      <div class="photo-corner tl"></div><div class="photo-corner tr"></div>
+      <div class="photo-corner bl"></div><div class="photo-corner br"></div>
+      <div class="photo-shape-tag"></div>
+      <div class="photo-overlay"><div class="photo-cat">Night</div><div class="photo-title">Long Exposure</div></div>
+    </div>
+
+  </div>
+</section>
+
+<!-- STATS — all 3 values computed dynamically from photo cards -->
+<div class="stats-strip">
+  <div class="strip-stat">
+    <div class="strip-num" id="statPhotos">—</div>
+    <div class="strip-label">Photographs</div>
+  </div>
+  <div class="strip-stat">
+    <div class="strip-num" id="statCategories">—</div>
+    <div class="strip-label">Categories</div>
+  </div>
+  <div class="strip-stat">
+    <div class="strip-num" id="statAltitude">—</div>
+    <div class="strip-label">Max Altitude</div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-copy">&#169; 2025 Kalpit Parekh — All rights reserved</div>
+  <div class="footer-links">
+    <a href="https://www.instagram.com/kalpit_parekh09" target="_blank" rel="noopener">Instagram</a>
+    <a href="https://www.youtube.com/channel/UCo263IKExHDQJvlQ5jgxpyw" target="_blank" rel="noopener">YouTube</a>
+    <a href="https://www.linkedin.com/in/kalpit-parekh-09/" target="_blank" rel="noopener">LinkedIn</a>
+  </div>
+</footer>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox">
+  <button class="lb-close" id="lbClose">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </button>
+  <button class="lb-nav lb-prev" id="lbPrev">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <button class="lb-nav lb-next" id="lbNext">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18l6-6-6-6"/></svg>
+  </button>
+  <div class="lb-wrap" id="lbWrap">
+    <img id="lbImg" src="" alt="">
+    <div class="lb-corner tl"></div><div class="lb-corner tr"></div>
+    <div class="lb-corner bl"></div><div class="lb-corner br"></div>
+    <div class="lb-info">
+      <div>
+        <div class="lb-cat"  id="lbCat"></div>
+        <div class="lb-title" id="lbTitle"></div>
+        <div class="lb-shape" id="lbShape"></div>
+      </div>
+      <div class="lb-counter" id="lbCounter"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CURSOR ────────────────────────────────────
+const cursor = document.getElementById('cursor');
+const ring   = document.getElementById('cursorRing');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove', e => {
+  mx=e.clientX; my=e.clientY;
+  cursor.style.left=mx+'px'; cursor.style.top=my+'px';
+});
+(function loop(){
+  rx+=(mx-rx)*.11; ry+=(my-ry)*.11;
+  ring.style.left=rx+'px'; ring.style.top=ry+'px';
+  requestAnimationFrame(loop);
+})();
+function cursorBig(on){
+  cursor.classList.toggle('expanded', on);
+  ring.classList.toggle('expanded', on);
+}
+document.querySelectorAll('a,button,.photo-card').forEach(el=>{
+  el.addEventListener('mouseenter',()=>cursorBig(true));
+  el.addEventListener('mouseleave',()=>cursorBig(false));
+});
+
+// ── SHAPE → GRID SPAN MAP ────────────────────
+function getShape(ratio){
+  if(ratio >= 2.4)  return { name:'Panoramic', cols:6, rows:20 };
+  if(ratio >= 1.55) return { name:'Landscape', cols:4, rows:26 };
+  if(ratio >= 1.15) return { name:'Standard',  cols:4, rows:30 };
+  if(ratio >= 0.85) return { name:'Square',    cols:3, rows:32 };
+  if(ratio >= 0.55) return { name:'Portrait',  cols:3, rows:46 };
+  return                    { name:'Tall',     cols:2, rows:52 };
+}
+
+// Shrink columns on small screens
+function responsiveCols(cols){
+  const w = window.innerWidth;
+  if(w <= 500) return Math.min(cols, 2);
+  if(w <= 900) return Math.min(cols, Math.ceil(cols/1.5));
+  return cols;
+}
+
+function applySpan(card, shape){
+  card.style.gridColumn = `span ${responsiveCols(shape.cols)}`;
+  card.style.gridRow    = `span ${shape.rows}`;
+}
+
+// ── INIT CARDS ───────────────────────────────
+const cards = Array.from(document.querySelectorAll('.photo-card'));
+
+cards.forEach((card, i) => {
+  const src = card.dataset.src || '';
+
+  // Inject hidden <img> for ratio detection, then make it the display image
+  const img = document.createElement('img');
+  img.alt = card.dataset.title || '';
+  // Not lazy — load immediately so stats count is accurate
+
+  // Insert before all other children so it sits at back of stack
+  card.insertBefore(img, card.firstChild);
+
+  if(!src){
+    // No image — show placeholder, default square slot
+    showPlaceholder(card, i);
+    applySpan(card, { cols:3, rows:32 });
+    card.style.opacity = '1';
+    return;
+  }
+
+  img.onload = () => {
+    const ratio = img.naturalWidth / img.naturalHeight;
+    const shape = getShape(ratio);
+    card.dataset.shape = shape.name;
+    card.dataset.ratio = ratio.toFixed(2);
+    // Set shape tag text
+    const tag = card.querySelector('.photo-shape-tag');
+    if(tag) tag.textContent = shape.name;
+    applySpan(card, shape);
+    card.classList.add('loaded');
+  };
+
+  img.onerror = () => {
+    img.remove();
+    showPlaceholder(card, i);
+    applySpan(card, { cols:3, rows:32 });
+    card.style.opacity = '1';
+  };
+
+  img.src = src;
+});
+
+function showPlaceholder(card, i){
+  const ph = document.createElement('div');
+  ph.className = 'photo-placeholder';
+  ph.innerHTML = `<div class="ph-num">${String(i+1).padStart(2,'0')}</div><div class="ph-txt">Add image</div>`;
+  card.insertBefore(ph, card.firstChild);
+}
+
+// ── REFLOW ON RESIZE ─────────────────────────
+let resizeTimer;
+window.addEventListener('resize', ()=>{
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(()=>{
+    const shapeMap = {
+      Panoramic:{cols:6,rows:20}, Landscape:{cols:4,rows:26},
+      Standard:{cols:4,rows:30},  Square:{cols:3,rows:32},
+      Portrait:{cols:3,rows:46},  Tall:{cols:2,rows:52}
+    };
+    cards.forEach(card=>{
+      const s = shapeMap[card.dataset.shape];
+      if(s) applySpan(card, s);
+    });
+  }, 150);
+});
+
+// ── FILTER ────────────────────────────────────
+document.querySelectorAll('.filter-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const f = btn.dataset.filter;
+    cards.forEach(card=>{
+      const show = f==='all' || card.dataset.category===f;
+      card.style.opacity      = show ? (card.classList.contains('loaded') ? '1' : '0') : '.12';
+      card.style.pointerEvents = show ? 'all' : 'none';
+      card.style.transition   = 'opacity .4s ease';
+      // Cards with placeholders always show at full opacity when visible
+      if(show && card.querySelector('.photo-placeholder')) card.style.opacity = '1';
+    });
+  });
+});
+
+// ── LIGHTBOX ──────────────────────────────────
+const lightbox  = document.getElementById('lightbox');
+const lbImg     = document.getElementById('lbImg');
+const lbTitle   = document.getElementById('lbTitle');
+const lbCat     = document.getElementById('lbCat');
+const lbShape   = document.getElementById('lbShape');
+const lbCounter = document.getElementById('lbCounter');
+let currentIdx  = 0;
+let visibleCards = [];
+
+function getVisible(){
+  return cards.filter(c=>
+    c.style.opacity !== '.12' &&
+    c.querySelector('img') &&
+    c.classList.contains('loaded')
+  );
+}
+function openLB(idx){
+  visibleCards = getVisible();
+  currentIdx   = Math.max(0, Math.min(idx, visibleCards.length-1));
+  showSlide(currentIdx);
+  lightbox.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLB(){
+  lightbox.classList.remove('open');
+  document.body.style.overflow = '';
+}
+function showSlide(idx){
+  const card = visibleCards[idx];
+  if(!card) return;
+  const imgEl = card.querySelector('img');
+  lbImg.src            = imgEl ? imgEl.src : '';
+  lbImg.alt            = card.dataset.title || '';
+  lbTitle.textContent  = card.dataset.title || '';
+  lbCat.textContent    = (card.dataset.category||'').replace('-',' ').toUpperCase();
+  lbShape.textContent  = card.dataset.shape
+    ? `${card.dataset.shape} · ${parseFloat(card.dataset.ratio).toFixed(2)}:1`
+    : '';
+  lbCounter.textContent = `${idx+1} / ${visibleCards.length}`;
+}
+
+cards.forEach(card=>{
+  card.addEventListener('click', ()=>{
+    if(!card.classList.contains('loaded')) return;
+    visibleCards = getVisible();
+    const vi = visibleCards.indexOf(card);
+    openLB(vi >= 0 ? vi : 0);
+  });
+});
+
+document.getElementById('lbClose').addEventListener('click', closeLB);
+document.getElementById('lbPrev').addEventListener('click', ()=>{
+  currentIdx=(currentIdx-1+visibleCards.length)%visibleCards.length;
+  showSlide(currentIdx);
+});
+document.getElementById('lbNext').addEventListener('click', ()=>{
+  currentIdx=(currentIdx+1)%visibleCards.length;
+  showSlide(currentIdx);
+});
+lightbox.addEventListener('click', e=>{ if(e.target===lightbox) closeLB(); });
+document.addEventListener('keydown', e=>{
+  if(!lightbox.classList.contains('open')) return;
+  if(e.key==='Escape')      closeLB();
+  if(e.key==='ArrowLeft')  { currentIdx=(currentIdx-1+visibleCards.length)%visibleCards.length; showSlide(currentIdx); }
+  if(e.key==='ArrowRight') { currentIdx=(currentIdx+1)%visibleCards.length; showSlide(currentIdx); }
+});
+
+// ── DYNAMIC STATS ─────────────────────────────
+// The simplest reliable approach:
+// - Categories & altitude read directly from data attributes (instant)
+// - Photo count = just count cards whose img.src is set and loaded
+//   We poll with a small delay so all images have time to process.
+
+const _allCards = Array.from(document.querySelectorAll('.photo-card'));
+const _cats     = new Set(_allCards.filter(c => c.dataset.category).map(c => c.dataset.category));
+const _maxAlt   = _allCards.reduce((max, c) => Math.max(max, parseInt(c.dataset.altitude) || 0), 0);
+
+function getLiveCount() {
+  return _allCards.filter(c => c.classList.contains('loaded')).length;
+}
+
+function setStats(photoCount) {
+  const el = document.getElementById('statPhotos');
+  if (el) el.innerHTML = photoCount + '<span>+</span>';
+  const el2 = document.getElementById('statCategories');
+  if (el2) el2.innerHTML = _cats.size;
+  const el3 = document.getElementById('statAltitude');
+  if (el3) el3.innerHTML = _maxAlt + '<span>m</span>';
+  const meta = document.getElementById('heroMeta');
+  if (meta) meta.textContent = `${photoCount} Frames · Ottawa & Beyond`;
+}
+
+function countUp(elId, target, suffix, duration) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const start = performance.now();
+  const tick = now => {
+    const p     = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - p, 3);
+    el.innerHTML = Math.round(eased * target) + suffix;
+    if (p < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+// Update photo count every time any card gets 'loaded' class
+_allCards.forEach(card => {
+  new MutationObserver(() => {
+    const count = getLiveCount();
+    // Always keep hero meta fresh
+    const meta = document.getElementById('heroMeta');
+    if (meta) meta.textContent = `${count} Frames · Ottawa & Beyond`;
+    // If stats already shown (strip is visible), update directly
+    const el = document.getElementById('statPhotos');
+    if (el && el.dataset.shown) el.innerHTML = count + '<span>+</span>';
+  }).observe(card, { attributes: true, attributeFilter: ['class'] });
+});
+
+// When stats strip comes into view, animate with current counts
+// Uses a 500ms delay so any fast-loading images are captured
+let _stripDone = false;
+const _strip = document.querySelector('.stats-strip');
+if (_strip) {
+  new IntersectionObserver(entries => {
+    if (!entries[0].isIntersecting || _stripDone) return;
+    _stripDone = true;
+    setTimeout(() => {
+      const count = getLiveCount();
+      document.getElementById('statPhotos').dataset.shown = '1';
+      countUp('statPhotos',     count,       '<span>+</span>', 1200);
+      countUp('statCategories', _cats.size,  '',               1000);
+      countUp('statAltitude',   _maxAlt,     '<span>m</span>', 1400);
+    }, 500);
+  }, { threshold: 0.2 }).observe(_strip);
+}
+
+// ── SCROLL REVEAL (stats + footer) ───────────
+const obs = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.style.opacity='1';
+      e.target.style.transform='translateY(0)';
+    }
+  });
+},{threshold:0.1});
+['.stats-strip','footer'].forEach(sel=>{
+  const el = document.querySelector(sel);
+  if(!el) return;
+  el.style.cssText += 'opacity:0;transform:translateY(24px);transition:opacity .8s ease,transform .8s ease;';
+  obs.observe(el);
+});
+</script>
+</body>
+</html>
